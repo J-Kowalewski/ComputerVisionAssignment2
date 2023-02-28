@@ -59,45 +59,45 @@ def set_voxel_positions(width, height, depth):
 def get_cam_positions():
     # Generates dummy camera locations at the 4 corners of the room
     # TODO: You need to input the estimated locations of the 4 cameras in the world coordinates.
-    R1, _ = cv.Rodrigues(rvecs1)
+    rvec = np.array((rvecs1[0], -rvecs1[2], -rvecs1[1]))
+    R1 = cv.Rodrigues(rvec)[0]
     x1, y1, z1 = -np.array(R1).T * np.matrix(tvecs1)
-    R2, _ = cv.Rodrigues(rvecs2)
+
+    rvec = np.array((rvecs2[0], -rvecs2[2], rvecs2[1]))
+    R2 = cv.Rodrigues(rvec)[0]
     x2, y2, z2 = -np.array(R2).T * np.matrix(tvecs2)
-    R3, _ = cv.Rodrigues(rvecs3)
+
+    rvec = np.array((rvecs3[0], -rvecs3[2], -rvecs3[1]))
+    R3 = cv.Rodrigues(rvec)[0]
     x3, y3, z3 = -np.array(R3).T * np.matrix(tvecs3)
-    R4, _ = cv.Rodrigues(rvecs4)
+
+    rvec = np.array((rvecs4[0], -rvecs4[2], -rvecs4[1]))
+    R4 = cv.Rodrigues(rvec)[0]
     x4, y4, z4 = -np.array(R4).T * np.matrix(tvecs4)
 
-    return [[x1 * block_size / squareSize, z1 * block_size / squareSize, y1 * block_size / squareSize],
-            [x2 * block_size / squareSize, z2 * block_size / squareSize, y2 * block_size / squareSize],
-            [x3 * block_size / squareSize, z3 * block_size / squareSize, y3 * block_size / squareSize],
-            [x4 * block_size / squareSize, z4 * block_size / squareSize, y4 * block_size / squareSize]]
+    return [[x1 * block_size / squareSize, z1 * block_size / squareSize, -y1 * block_size / squareSize],
+            [x2 * block_size / squareSize, z2 * block_size / squareSize, -y2 * block_size / squareSize],
+            [x3 * block_size / squareSize, z3 * block_size / squareSize, -y3 * block_size / squareSize],
+            [x4 * block_size / squareSize, z4 * block_size / squareSize, -y4 * block_size / squareSize]]
 
 
 def get_cam_rotation_matrices():
     # Generates dummy camera rotation matrices, looking down 45 degrees towards the center of the room
     # TODO: You need to input the estimated camera rotation matrices (4x4) of the 4 cameras in the world coordinates.
-    R1, _ = cv.Rodrigues(rvecs1)
-    R2, _ = cv.Rodrigues(rvecs2)
-    R3, _ = cv.Rodrigues(rvecs3)
-    R4, _ = cv.Rodrigues(rvecs4)
 
-    cam_angles = [R1, R2, R3, R4]
-    print(cam_angles)
-    tvecArr = [tvecs1, tvecs2, tvecs3, tvecs4]
-    cam_rotations = []
-    for c in range(len(cam_angles)):
-        glm_mat = glm.mat4(float(cam_angles[c][0][0]), float(cam_angles[c][2][0]), float(cam_angles[c][1][0]), 0,
-                           float(cam_angles[c][0][1]), float(cam_angles[c][2][1]), float(cam_angles[c][1][1]), 0,
-                           float(cam_angles[c][0][2]), float(cam_angles[c][2][2]), float(cam_angles[c][1][2]), 0,
-                           0, 0, 0, 1)
-        print('----')
-        print(glm_mat)
-        glm_mat = glm.rotate(glm_mat, glm.radians(90), (0, 1, 1))
-        cam_rotations.append(glm_mat)
+    rvecs = [rvecs1, rvecs2, rvecs3, rvecs4]
+    rMats = []
+    for c in range(len(rvecs)):
+        rvec = np.array((rvecs[c][0], -rvecs[c][2], -rvecs[c][1]))
+        rMat = cv.Rodrigues(rvec)[0]
+        rMat2 = np.identity(4)
+        rMat2[:3, :3] = rMat
+        rMats.append(rMat2)
 
+    cam_angles = [[0, 0, -90], [0, 0, -90], [0, 0, -90], [0, 0, -90]]
+    cam_rotations = [glm.mat4(rMats[0]), glm.mat4(rMats[1]), glm.mat4(rMats[2]), glm.mat4(rMats[3])]
     for c in range(len(cam_rotations)):
-        cam_rotations[c] = glm.rotate(cam_rotations[c], tvecArr[c][0] * np.pi / 180, [1, 0, 0])
-        cam_rotations[c] = glm.rotate(cam_rotations[c], tvecArr[c][2] * np.pi / 180, [0, 1, 0])
-        cam_rotations[c] = glm.rotate(cam_rotations[c], tvecArr[c][1] * np.pi / 180, [0, 0, 1])
+        cam_rotations[c] = glm.rotate(cam_rotations[c], cam_angles[c][0] * np.pi / 180, [1, 0, 0])
+        cam_rotations[c] = glm.rotate(cam_rotations[c], cam_angles[c][1] * np.pi / 180, [0, 1, 0])
+        cam_rotations[c] = glm.rotate(cam_rotations[c], cam_angles[c][2] * np.pi / 180, [0, 0, 1])
     return cam_rotations

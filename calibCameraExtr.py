@@ -32,7 +32,7 @@ def click_event(event, x, y, flags, params):
             interpolatedCoords = utils.newInterpolation(img,userCoordinates)
 
 
-for i in range(4, 5):
+for i in range(1, 5):
     # prepare object points (0,0,0), (1,0,0) etc...
     objp = np.zeros((chesssize[0] * chesssize[1], 3), np.float32)
     objp[:, :2] = (square_size * np.mgrid[0:8, 0:6]).T.reshape(-1, 2)

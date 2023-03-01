@@ -50,51 +50,18 @@ def generate_grid(width, depth):
     return data
 
 
-# def set_voxel_positions(width, height, depth):
-#     # Generates random voxel locations
-#     # TODO: You need to calculate proper voxel arrays instead of random ones.
-#     data = []
-#     for x in range(width):
-#         for y in range(height):
-#             for z in range(depth):
-#                 if random.randint(0, 1000) < 5:
-#                     data.append([x * block_size - width / 2, y * block_size, z * block_size - depth / 2])
-#     return data
 def set_voxel_positions(width, height, depth):
-    # Generates random voxel locations
-    # TODO: You need to calculate proper voxel arrays instead of random ones.
-    images = [cv.imread('../data/cam1/foreground.jpg'), cv.imread('../data/cam2/foreground.jpg'),
-              cv.imread('../data/cam3/foreground.jpg'), cv.imread('../data/cam4/foreground.jpg')]
-    rvecs = [rvecs1, rvecs2, rvecs3, rvecs4]
-    tvecs = [tvecs1, tvecs2, tvecs3, tvecs4]
-    cmatrices = [cmatrix1, cmatrix2, cmatrix3, cmatrix4]
-    dists = [dist1, dist2, dist3, dist4]
-    masks = [mask1, mask2, mask3, mask4]
+    storage = cv.FileStorage('../data/lookuptable.xml', cv.FileStorage_READ)
+    table = storage.getNode('table').mat()
+    shape = table.shape
     data = []
-    for x in range(0, 1800, 40):
-        for y in range(0, 1800, 40):
-            for z in range(0, 1800, 40):
-                flag = True
-                point = np.float32([x, y, z])
-                for i in range(0, 4):
-                    img = images[i]
-                    rvec = rvecs[i]
-                    tvec = tvecs[i]
-                    cmatrix = cmatrices[i]
-                    dist = dists[i]
-                    table = masks[i]
-                    point2d, _ = cv.projectPoints(point, rvec, tvec, cmatrix, dist)
-                    point2d = tuple(map(int, point2d.ravel()))
-                    if table[point2d[1], point2d[0]] == 0:
-                        flag = False
-                if flag:
-                    data.append([x * .01, z * .01, -y * .01])
+    for i in range(0, shape[0]):
+        if table[i][3] == 1:
+            data.append([table[i][0], table[i][1], table[i][2]])
     return data
 
 
 def get_cam_positions():
-    # Generates dummy camera locations at the 4 corners of the room
-    # TODO: You need to input the estimated locations of the 4 cameras in the world coordinates.
     rvec = np.array((rvecs1[0], -rvecs1[2], -rvecs1[1]))
     R1 = cv.Rodrigues(rvec)[0]
     x1, y1, z1 = -np.array(R1).T * np.matrix(tvecs1)
@@ -118,20 +85,17 @@ def get_cam_positions():
 
 
 def get_cam_rotation_matrices():
-    # Generates dummy camera rotation matrices, looking down 45 degrees towards the center of the room
-    # TODO: You need to input the estimated camera rotation matrices (4x4) of the 4 cameras in the world coordinates.
-
     rvecs = [rvecs1, rvecs2, rvecs3, rvecs4]
-    rMats = []
+    rMatrices = []
     for c in range(len(rvecs)):
         rvec = np.array((rvecs[c][0], -rvecs[c][2], -rvecs[c][1]))
-        rMat = cv.Rodrigues(rvec)[0]
-        rMat2 = np.identity(4)
-        rMat2[:3, :3] = rMat
-        rMats.append(rMat2)
+        rMatrix = cv.Rodrigues(rvec)[0]
+        rMatrix2 = np.identity(4)
+        rMatrix2[:3, :3] = rMatrix
+        rMatrices.append(rMatrix2)
 
     cam_angles = [[0, 0, -90], [0, 0, -90], [0, 0, -90], [0, 0, -90]]
-    cam_rotations = [glm.mat4(rMats[0]), glm.mat4(rMats[1]), glm.mat4(rMats[2]), glm.mat4(rMats[3])]
+    cam_rotations = [glm.mat4(rMatrices[0]), glm.mat4(rMatrices[1]), glm.mat4(rMatrices[2]), glm.mat4(rMatrices[3])]
     for c in range(len(cam_rotations)):
         cam_rotations[c] = glm.rotate(cam_rotations[c], cam_angles[c][0] * np.pi / 180, [1, 0, 0])
         cam_rotations[c] = glm.rotate(cam_rotations[c], cam_angles[c][1] * np.pi / 180, [0, 1, 0])

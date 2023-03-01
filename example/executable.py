@@ -129,6 +129,8 @@ def main():
         if config['debug_mode']:
             print(glGetError())
 
+        # TODO live representation of voxels from video frames
+
         current_time = glfw.get_time()
         delta_time = current_time - last_time
         last_time = current_time

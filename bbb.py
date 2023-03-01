@@ -68,6 +68,6 @@ while True:
 cv.waitKey(0)
 # Release video object
 cap.release()
-
+cv.imwrite('data/cam4/foreground.jpg', im_result)
 # Destroy all windows
 cv.destroyAllWindows()

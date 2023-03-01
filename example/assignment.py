@@ -33,6 +33,12 @@ tvecs4 = s4.getNode('Tvecs').mat()
 s5 = cv.FileStorage('../data/checkerboard.xml', cv.FileStorage_READ)
 squareSize = s5.getNode('CheckerBoardSquareSize').real()
 
+s6 = cv.FileStorage('../data/masks.xml', cv.FileStorage_READ)
+mask1 = s6.getNode('mask1').mat()
+mask2 = s6.getNode('mask2').mat()
+mask3 = s6.getNode('mask3').mat()
+mask4 = s6.getNode('mask4').mat()
+
 
 def generate_grid(width, depth):
     # Generates the floor grid locations
@@ -44,15 +50,45 @@ def generate_grid(width, depth):
     return data
 
 
+# def set_voxel_positions(width, height, depth):
+#     # Generates random voxel locations
+#     # TODO: You need to calculate proper voxel arrays instead of random ones.
+#     data = []
+#     for x in range(width):
+#         for y in range(height):
+#             for z in range(depth):
+#                 if random.randint(0, 1000) < 5:
+#                     data.append([x * block_size - width / 2, y * block_size, z * block_size - depth / 2])
+#     return data
 def set_voxel_positions(width, height, depth):
     # Generates random voxel locations
     # TODO: You need to calculate proper voxel arrays instead of random ones.
+    images = [cv.imread('../data/cam1/foreground.jpg'), cv.imread('../data/cam2/foreground.jpg'),
+              cv.imread('../data/cam3/foreground.jpg'), cv.imread('../data/cam4/foreground.jpg')]
+    rvecs = [rvecs1, rvecs2, rvecs3, rvecs4]
+    tvecs = [tvecs1, tvecs2, tvecs3, tvecs4]
+    cmatrices = [cmatrix1, cmatrix2, cmatrix3, cmatrix4]
+    dists = [dist1, dist2, dist3, dist4]
+    masks = [mask1, mask2, mask3, mask4]
     data = []
-    for x in range(width):
-        for y in range(height):
-            for z in range(depth):
-                if random.randint(0, 1000) < 5:
-                    data.append([x * block_size - width / 2, y * block_size, z * block_size - depth / 2])
+    for x in range(0, 1800, 40):
+        for y in range(0, 1800, 40):
+            for z in range(0, 1800, 40):
+                flag = True
+                point = np.float32([x, y, z])
+                for i in range(0, 4):
+                    img = images[i]
+                    rvec = rvecs[i]
+                    tvec = tvecs[i]
+                    cmatrix = cmatrices[i]
+                    dist = dists[i]
+                    table = masks[i]
+                    point2d, _ = cv.projectPoints(point, rvec, tvec, cmatrix, dist)
+                    point2d = tuple(map(int, point2d.ravel()))
+                    if table[point2d[1], point2d[0]] == 0:
+                        flag = False
+                if flag:
+                    data.append([x * .1, z * .1, y * .1])
     return data
 
 

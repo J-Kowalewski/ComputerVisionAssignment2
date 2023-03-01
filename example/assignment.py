@@ -88,7 +88,7 @@ def set_voxel_positions(width, height, depth):
                     if table[point2d[1], point2d[0]] == 0:
                         flag = False
                 if flag:
-                    data.append([x * .1, z * .1, y * .1])
+                    data.append([x * .01, z * .01, -y * .01])
     return data
 
 
@@ -99,7 +99,7 @@ def get_cam_positions():
     R1 = cv.Rodrigues(rvec)[0]
     x1, y1, z1 = -np.array(R1).T * np.matrix(tvecs1)
 
-    rvec = np.array((rvecs2[0], -rvecs2[2], rvecs2[1]))
+    rvec = np.array((rvecs2[0], -rvecs2[2], -rvecs2[1]))
     R2 = cv.Rodrigues(rvec)[0]
     x2, y2, z2 = -np.array(R2).T * np.matrix(tvecs2)
 
